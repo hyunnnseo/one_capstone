@@ -1,21 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: RouteFindingScreen(),
-    );
-  }
-}
+import 'package:location/location.dart';
+import 'package:map_test/Search_page.dart';
 
 class RouteFindingScreen extends StatefulWidget {
   @override
@@ -24,19 +10,13 @@ class RouteFindingScreen extends StatefulWidget {
 
 class _RouteFindingScreenState extends State<RouteFindingScreen> {
   late WebViewController controller;
-  bool isSearching = false;
-  final TextEditingController startController = TextEditingController();
-  final TextEditingController destinationController = TextEditingController();
-
-  void toggleSearch() {
-    setState(() {
-      isSearching = !isSearching;
-    });
-  }
+  LocationData? currentLocation;
+  final String tmapApiKey = 'TVBrEtYkTX31JmnOksxwK52pup7Ku3Oua4xqHBN4';
 
   @override
   void initState() {
     super.initState();
+    getCurrentLocation();
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..loadHtmlString('''
@@ -45,7 +25,7 @@ class _RouteFindingScreenState extends State<RouteFindingScreen> {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-            <script src="https://apis.openapi.sk.com/tmap/jsv2?version=latest&appKey=TVBrEtYkTX31JmnOksxwK52pup7Ku3Oua4xqHBN4"></script>
+            <script src="https://apis.openapi.sk.com/tmap/jsv2?version=latest&appKey=$tmapApiKey"></script>
             <style>
                 body, html {
                     margin: 0;
@@ -63,18 +43,53 @@ class _RouteFindingScreenState extends State<RouteFindingScreen> {
         <body onload="initTmap()">
             <div id="map"></div>
             <script>
+                var map;
+                var marker;
                 function initTmap() {
-                    var map = new Tmapv2.Map("map", {
+                    map = new Tmapv2.Map("map", {
                         center: new Tmapv2.LatLng(37.5665, 126.9780),
                         width: "100%",
                         height: "100%",
                         zoom: 15
                     });
                 }
+
+                function setCenter(lat, lng) {
+                    map.setCenter(new Tmapv2.LatLng(lat, lng));
+                    if (marker) {
+                        marker.setMap(null);
+                    }
+                    marker = new Tmapv2.Marker({
+                        position: new Tmapv2.LatLng(lat, lng),
+                        map: map
+                    });
+                }
             </script>
         </body>
         </html>
       ''');
+  }
+
+  Future<void> getCurrentLocation() async {
+    Location location = Location();
+
+    bool serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) return;
+    }
+
+    PermissionStatus permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) return;
+    }
+
+    currentLocation = await location.getLocation();
+    if (currentLocation != null) {
+      controller.runJavaScript(
+          "setCenter(${currentLocation!.latitude}, ${currentLocation!.longitude});");
+    }
   }
 
   @override
@@ -92,15 +107,13 @@ class _RouteFindingScreenState extends State<RouteFindingScreen> {
       ),
       body: Stack(
         children: [
-          WebViewWidget(controller: controller), // Tmap이 표시되는 WebView
-          // 검색 바 또는 출발지/목적지 입력 칸
+          WebViewWidget(controller: controller),
           Positioned(
             top: 16,
             left: 16,
             right: 16,
             child: Container(
-              height: 50,
-              padding: EdgeInsets.symmetric(horizontal: 8.0),
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8.0),
@@ -113,68 +126,38 @@ class _RouteFindingScreenState extends State<RouteFindingScreen> {
                   ),
                 ],
               ),
-              child: isSearching
-                  ? Row(
+              child: Row(
                 children: [
+                  Icon(Icons.menu, color: Colors.black),
+                  SizedBox(width: 8.0),
                   Expanded(
-                    child: TextField(
-                      controller: startController,
-                      decoration: InputDecoration(
-                        hintText: '출발지 입력',
-                        border: InputBorder.none,
+                    child: GestureDetector(
+                      onTap: () {
+                        // 검색 페이지 이동 구현
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => SearchPage()),
+                        );
+                      },
+                      child: TextField(
+                        enabled: false, // 직접 입력 불가, 클릭 시 검색 페이지 이동
+                        decoration: InputDecoration(
+                          hintText: '장소, 버스, 지하철, 주소 검색',
+                          border: InputBorder.none,
+                        ),
                       ),
                     ),
                   ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: destinationController,
-                      decoration: InputDecoration(
-                        hintText: '목적지 입력',
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.arrow_back),
-                    onPressed: toggleSearch, // 뒤로 가기 버튼
-                  ),
-                ],
-              )
-                  : Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.menu, color: Colors.black),
-                    onPressed: () {},
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: '장소, 버스, 지하철, 주소 검색',
-                        border: InputBorder.none,
-                      ),
-                      onTap: toggleSearch,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.mic, color: Colors.black),
-                    onPressed: () {},
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.search, color: Colors.black),
-                    onPressed: toggleSearch,
-                  ),
+                  Icon(Icons.search, color: Colors.black),
                 ],
               ),
             ),
           ),
-          // 즐겨찾기 버튼 (검색 바 아래에 위치)
           Positioned(
             top: 80,
             left: 16,
             child: ElevatedButton.icon(
-              onPressed: () {}, // 즐겨찾기 기능 추가 시 사용할 콜백
+              onPressed: () {},
               icon: Icon(Icons.star_border),
               label: Text('즐겨찾기'),
               style: ElevatedButton.styleFrom(
@@ -188,29 +171,16 @@ class _RouteFindingScreenState extends State<RouteFindingScreen> {
               ),
             ),
           ),
-          // 길찾기 버튼 (목적지 입력 필드 아래 오른쪽에 위치)
-          if (isSearching)
-            Positioned(
-              top: 80,
-              right: 16,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // 길찾기 기능 구현
-                },
-                icon: Icon(Icons.directions),
-                label: Text('길찾기'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-              ),
+          Positioned(
+            bottom: 80,
+            left: 16,
+            child: FloatingActionButton(
+              onPressed: getCurrentLocation,
+              child: Icon(Icons.my_location),
             ),
+          ),
         ],
       ),
-      // 하단 내비게이션 바
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(

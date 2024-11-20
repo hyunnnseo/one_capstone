@@ -19,6 +19,9 @@ dependencies:
   webview_flutter_wkwebview: ^3.16.0
   webview_flutter: ^4.10.0
   geolocator: ^9.0.0
+  google_maps_flutter: ^2.10.0
+  http: ^1.2.2
+  location: ^7.0.1
 
 dev_dependencies:
   flutter_test:

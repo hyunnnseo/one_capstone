@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'alarm_settings_screen.dart';
+import 'my_page_modify.dart'; // 내 정보 수정 페이지 import
 
 void main() {
   runApp(const MyApp());
@@ -118,7 +119,12 @@ class _ProfileScreenState extends State<MyPage> {
             ListTile(
               leading: Icon(Icons.edit, color: Colors.black),
               title: Text('내정보 수정'),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyPageModify()), // 내 정보 수정 페이지로 이동
+                );
+              },
             ),
             Divider(thickness: 1, color: Colors.grey), // 줄 추가
             ListTile(

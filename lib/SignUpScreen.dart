@@ -74,54 +74,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
               ),
               SizedBox(height: 16),
-              // 성별 및 생년월일 입력
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      decoration: InputDecoration(labelText: '성별'),
-                      items: [
-                        DropdownMenuItem(
-                          child: Text('남성'),
-                          value: '남성',
-                        ),
-                        DropdownMenuItem(
-                          child: Text('여성'),
-                          value: '여성',
-                        ),
-                      ],
-                      onChanged: (value) {},
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: '생년월일 (YYYY/MM/DD)',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16),
-              // 휴대전화 번호 입력
-              TextField(
-                decoration: InputDecoration(
-                  labelText: '휴대전화 번호 (-제외)',
-                  suffix: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent, // 버튼 색상 설정
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                    ),
-                    child: Text(
-                      '인증 요청',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
               // 전체 동의 및 개별 동의 체크박스
               CheckboxListTile(
                 value: isAllChecked,

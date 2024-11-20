@@ -26,7 +26,7 @@ class _LoginState extends State<Login> {
               SizedBox(height: 50),
               // 로고 이미지
               Image.asset(
-                'assets/logo.png', // 로고 이미지 파일 경로
+                'assets/logo.png',
                 width: 200,
                 height: 150,
                 fit: BoxFit.contain,
@@ -35,7 +35,7 @@ class _LoginState extends State<Login> {
               // 회원 가입하기 버튼
               TextButton(
                 onPressed: () {
-                  // 회원가입 페이지 이동 기능
+                  // 회원가입 페이지 이동
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => SignUpScreen()),

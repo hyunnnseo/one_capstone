@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-
-import 'my_page.dart';
-
-void main() {
-  runApp(const MyApp());
-}
+import 'my_page.dart'; // MyPage를 유지
+import 'find.dart'; // find.dart import
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -33,6 +29,18 @@ class _TmapScreenState extends State<MainScreen> {
     super.initState();
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel(
+        "MapChannel", // JavaScript와 연결되는 채널
+        onMessageReceived: (message) {
+          if (message.message == "map_clicked") {
+            // HTML에서 "map_clicked" 메시지를 수신하면 find.dart로 이동
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => RouteFindingScreen()),
+            );
+          }
+        },
+      )
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageFinished: (String url) {
@@ -72,6 +80,12 @@ class _TmapScreenState extends State<MainScreen> {
                         width: "100%",
                         height: "100%",
                         zoom: 15
+                    });
+
+                    // 지도 클릭 이벤트 추가
+                    map.addListener("click", function() {
+                        // Flutter로 메시지 전송
+                        MapChannel.postMessage("map_clicked");
                     });
                 }
             </script>
@@ -133,7 +147,7 @@ class _TmapScreenState extends State<MainScreen> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => MyPage()),
+                        MaterialPageRoute(builder: (context) => MyPage()), // MyPage로 이동
                       );
                     },
                   ),
